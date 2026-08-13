@@ -52,6 +52,10 @@ export const metadata: Metadata = {
     googleBot: { index: true, follow: true },
   },
   manifest: "/manifest.webmanifest",
+  other: {
+    // Site-ownership verification.
+    "ory-verify": "orynth-289975a35a2a4a70a4f3af87ead7d4d2",
+  },
 };
 
 export const viewport: Viewport = {
