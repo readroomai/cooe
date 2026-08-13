@@ -44,7 +44,40 @@ function isBrowser() {
 }
 
 function announce() {
-  if (isBrowser()) window.dispatchEvent(new Event(HISTORY_EVENT));
+  if (!isBrowser()) return;
+  snapshot = null;
+  window.dispatchEvent(new Event(HISTORY_EVENT));
+}
+
+/**
+ * Cached snapshot so `useSyncExternalStore` gets a stable reference between
+ * renders — re-parsing on every call would loop forever.
+ */
+let snapshot: HistoryEntry[] | null = null;
+const EMPTY_SNAPSHOT: HistoryEntry[] = [];
+
+export function subscribeToHistory(onChange: () => void): () => void {
+  if (!isBrowser()) return () => {};
+  const handler = () => {
+    snapshot = null;
+    onChange();
+  };
+  window.addEventListener(HISTORY_EVENT, handler);
+  window.addEventListener("storage", handler);
+  return () => {
+    window.removeEventListener(HISTORY_EVENT, handler);
+    window.removeEventListener("storage", handler);
+  };
+}
+
+export function getHistorySnapshot(): HistoryEntry[] {
+  if (!isBrowser()) return EMPTY_SNAPSHOT;
+  if (!snapshot) snapshot = readHistory();
+  return snapshot;
+}
+
+export function getServerHistorySnapshot(): HistoryEntry[] {
+  return EMPTY_SNAPSHOT;
 }
 
 export function readHistory(): HistoryEntry[] {
@@ -83,7 +116,14 @@ function write(entries: HistoryEntry[]) {
   announce();
 }
 
-export function saveHistory(entry: Omit<HistoryEntry, "id" | "at"> & { id?: string }) {
+/** Distributes over the union so each mode keeps its own payload shape. */
+export type NewHistoryEntry = HistoryEntry extends infer T
+  ? T extends HistoryEntry
+    ? Omit<T, "id" | "at"> & { id?: string }
+    : never
+  : never;
+
+export function saveHistory(entry: NewHistoryEntry) {
   const id =
     entry.id ??
     (isBrowser() && "randomUUID" in crypto

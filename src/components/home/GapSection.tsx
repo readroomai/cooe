@@ -2,7 +2,7 @@ import { Signal } from "@/components/shared/Signal";
 
 export function GapSection() {
   return (
-    <section className="border-t border-line px-5 py-20 sm:px-10 sm:py-32">
+    <section className="relative overflow-hidden border-t border-line px-5 py-20 sm:px-10 sm:py-32">
       <div className="mx-auto max-w-[1120px]">
         <p className="eyebrow">The gap</p>
 
@@ -11,7 +11,20 @@ export function GapSection() {
           it across.
         </h2>
 
-        <div className="mt-16 grid gap-10 sm:mt-24 sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-6">
+        <div className="relative mt-16 grid gap-10 sm:mt-24 sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-6">
+          {/* Two fields, drifting apart — the section's argument, made visible. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-[-8%] top-1/2 -z-10 -translate-y-1/2"
+          >
+            <Signal
+              variant="gap"
+              className="h-[380px] w-full sm:h-[440px]"
+              opacity={0.36}
+              sizes="(max-width: 640px) 110vw, 1200px"
+            />
+          </div>
+
           <figure className="sm:pr-8">
             <figcaption className="eyebrow">What you mean</figcaption>
             <blockquote className="serif mt-4 text-[clamp(1.3rem,3.4vw,1.9rem)] leading-[1.28] text-ink">
@@ -20,12 +33,6 @@ export function GapSection() {
           </figure>
 
           <div className="relative flex items-center justify-center py-2 sm:h-full sm:w-[180px] sm:py-0">
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 flex items-center justify-center"
-            >
-              <Signal className="h-[150px] w-[150px]" blur={34} opacity={0.5} />
-            </div>
             <div className="relative text-center">
               <span className="block text-[13px] lowercase tracking-[-0.02em] text-ink">
                 cooe

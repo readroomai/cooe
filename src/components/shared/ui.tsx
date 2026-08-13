@@ -92,6 +92,7 @@ type TextAreaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   error?: string;
   limit?: number;
   showCount?: boolean;
+  ref?: React.Ref<HTMLTextAreaElement>;
 };
 
 export function TextArea({
@@ -103,6 +104,7 @@ export function TextArea({
   className,
   id,
   value,
+  ref,
   ...props
 }: TextAreaProps) {
   const auto = useId();
@@ -116,6 +118,7 @@ export function TextArea({
         {label}
       </FieldLabel>
       <textarea
+        ref={ref}
         id={fieldId}
         value={value}
         aria-invalid={error ? true : undefined}

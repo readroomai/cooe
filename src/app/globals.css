@@ -101,7 +101,7 @@ body {
   }
 }
 
-/* ---- Signal orb ----------------------------------------------------- */
+/* ---- Signal ---------------------------------------------------------- */
 
 .signal-root {
   position: relative;
@@ -109,139 +109,53 @@ body {
   pointer-events: none;
 }
 
-.signal-field {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  filter: blur(var(--signal-blur, 44px));
-  will-change: transform, opacity;
+.signal-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  will-change: transform;
+  animation: signal-drift 24s var(--ease-quiet) infinite;
+  user-select: none;
 }
 
-.signal-a {
-  background: radial-gradient(
-    circle at 50% 36%,
-    #ff4d05 0%,
-    #ff6a1e 26%,
-    rgba(255, 138, 92, 0.72) 47%,
-    rgba(255, 173, 150, 0.34) 63%,
-    rgba(255, 255, 255, 0) 76%
-  );
-  animation: signal-drift-a 22s var(--ease-quiet) infinite;
-}
-
-.signal-b {
-  background: radial-gradient(
-    circle at 46% 66%,
-    rgba(255, 150, 176, 0.92) 0%,
-    rgba(255, 183, 201, 0.62) 30%,
-    rgba(255, 214, 224, 0.3) 52%,
-    rgba(255, 255, 255, 0) 72%
-  );
-  animation: signal-drift-b 27s var(--ease-quiet) infinite;
-}
-
-.signal-c {
-  background: radial-gradient(
-    circle at 62% 48%,
-    rgba(255, 108, 40, 0.45) 0%,
-    rgba(255, 190, 120, 0.22) 40%,
-    rgba(255, 255, 255, 0) 68%
-  );
-  animation: signal-drift-c 33s var(--ease-quiet) infinite;
-}
-
-/* Grain keeps the orb from reading as a generated 3D ball. */
-.signal-grain {
-  position: absolute;
-  inset: -6%;
-  border-radius: 50%;
-  opacity: 0.5;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.32'/%3E%3C/svg%3E");
-  -webkit-mask-image: radial-gradient(circle at 50% 48%, #000 0%, #000 40%, transparent 72%);
-  mask-image: radial-gradient(circle at 50% 48%, #000 0%, #000 40%, transparent 72%);
-}
-
-@keyframes signal-drift-a {
+@keyframes signal-drift {
   0%,
   100% {
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
   }
   33% {
-    transform: translate3d(-2.5%, 2%, 0) scale(1.045);
+    transform: translate3d(-1.8%, 1.6%, 0) scale(1.04) rotate(-1.2deg);
   }
   66% {
-    transform: translate3d(2%, -1.5%, 0) scale(0.975);
+    transform: translate3d(1.6%, -1.2%, 0) scale(0.975) rotate(0.8deg);
   }
 }
 
-@keyframes signal-drift-b {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1.02);
-  }
-  40% {
-    transform: translate3d(3.5%, -2.5%, 0) scale(0.95);
-  }
-  70% {
-    transform: translate3d(-2%, 3%, 0) scale(1.07);
-  }
+/* Typing — the field tightens and quickens. */
+.signal-root[data-state="typing"] .signal-image {
+  animation-duration: 12s;
 }
 
-@keyframes signal-drift-c {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(0.96);
-  }
-  50% {
-    transform: translate3d(-4%, -3%, 0) scale(1.1);
-  }
+/* Analysing — a slow breath. */
+.signal-root[data-state="analyzing"] .signal-image {
+  animation: signal-breathe 3.8s ease-in-out infinite;
 }
 
-/* State: user is typing — the field tightens slightly. */
-.signal-root[data-state="typing"] .signal-field {
-  animation-duration: 11s, 13s, 16s;
-}
-.signal-root[data-state="typing"] .signal-a {
-  animation-duration: 11s;
-}
-.signal-root[data-state="typing"] .signal-b {
-  animation-duration: 13s;
-}
-.signal-root[data-state="typing"] .signal-c {
-  animation-duration: 16s;
-}
-
-/* State: analysing — a slow breath. */
-.signal-root[data-state="analyzing"] {
-  animation: signal-breathe 3.6s ease-in-out infinite;
-}
 @keyframes signal-breathe {
   0%,
   100% {
-    transform: scale(1);
-    opacity: 0.94;
+    transform: scale(0.97);
+    opacity: 0.9;
   }
   50% {
-    transform: scale(1.06);
+    transform: scale(1.05);
     opacity: 1;
   }
 }
 
-/* State: result — the field separates into two overlapping meanings. */
-.signal-root[data-state="result"] .signal-a {
-  transform: translate3d(-9%, -4%, 0) scale(0.9);
-  animation: none;
-  transition: transform 1.6s var(--ease-quiet);
-}
-.signal-root[data-state="result"] .signal-b {
-  transform: translate3d(11%, 5%, 0) scale(0.92);
-  animation: none;
-  transition: transform 1.6s var(--ease-quiet);
-}
-.signal-root[data-state="result"] .signal-c {
-  opacity: 0.5;
-  animation: none;
+/* Result — the two fields settle. */
+.signal-root[data-state="result"] .signal-image {
+  animation-duration: 34s;
 }
 
 /* ---- Motion preferences --------------------------------------------- */
@@ -250,7 +164,7 @@ body {
   html {
     scroll-behavior: auto;
   }
-  .signal-field,
+  .signal-image,
   .signal-root {
     animation: none !important;
     transition: none !important;

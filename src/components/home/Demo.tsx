@@ -35,8 +35,8 @@ export function Demo() {
         <Signal
           className="h-[380px] w-[380px]"
           state={open ? "result" : "idle"}
-          blur={60}
-          opacity={0.34}
+          opacity={0.38}
+          sizes="420px"
         />
       </div>
 

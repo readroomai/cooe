@@ -1,11 +1,14 @@
 import "server-only";
 
 import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { z } from "zod";
+import { toStrictJsonSchema } from "./json-schema";
 
-export const DEFAULT_MODEL = "claude-sonnet-5";
+export const DEFAULT_OPENAI_MODEL = "gpt-5.5";
+export const DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-5";
 
-let client: Anthropic | null = null;
+export type Provider = "openai" | "anthropic";
 
 export class CooeAIError extends Error {
   constructor(
@@ -18,39 +21,54 @@ export class CooeAIError extends Error {
   }
 }
 
-function getClient(): Anthropic {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    throw new CooeAIError(
-      "ANTHROPIC_API_KEY is not set.",
-      503,
-      "unconfigured",
-    );
+/** Provider is explicit if configured, otherwise inferred from available keys. */
+export function getProvider(): Provider | null {
+  const explicit = process.env.AI_PROVIDER?.trim().toLowerCase();
+  if (explicit === "openai") return process.env.OPENAI_API_KEY ? "openai" : null;
+  if (explicit === "anthropic")
+    return process.env.ANTHROPIC_API_KEY ? "anthropic" : null;
+  if (process.env.OPENAI_API_KEY) return "openai";
+  if (process.env.ANTHROPIC_API_KEY) return "anthropic";
+  return null;
+}
+
+export function isAIConfigured(): boolean {
+  return getProvider() !== null;
+}
+
+export function getModel(provider: Provider): string {
+  if (provider === "openai") {
+    return process.env.OPENAI_MODEL?.trim() || DEFAULT_OPENAI_MODEL;
   }
-  if (!client) client = new Anthropic({ apiKey, maxRetries: 2 });
-  return client;
+  return process.env.ANTHROPIC_MODEL?.trim() || DEFAULT_ANTHROPIC_MODEL;
 }
 
-export function getModel(): string {
-  return process.env.ANTHROPIC_MODEL?.trim() || DEFAULT_MODEL;
+let openaiClient: OpenAI | null = null;
+let anthropicClient: Anthropic | null = null;
+
+function getOpenAI(): OpenAI {
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      maxRetries: 2,
+      timeout: 90_000,
+    });
+  }
+  return openaiClient;
 }
 
-type JSONSchemaObject = {
-  type: "object";
-  properties?: Record<string, unknown>;
-  required?: string[];
-  [key: string]: unknown;
-};
-
-function toInputSchema(schema: z.ZodType): JSONSchemaObject {
-  const json = z.toJSONSchema(schema, {
-    io: "input",
-    target: "draft-7",
-    unrepresentable: "any",
-  }) as Record<string, unknown>;
-  delete json.$schema;
-  return { ...json, type: "object" } as JSONSchemaObject;
+function getAnthropic(): Anthropic {
+  if (!anthropicClient) {
+    anthropicClient = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+      maxRetries: 2,
+      timeout: 90_000,
+    });
+  }
+  return anthropicClient;
 }
+
+export type ReasoningEffort = "low" | "medium" | "high";
 
 export type StructuredCallOptions<T extends z.ZodType> = {
   system: string;
@@ -60,27 +78,143 @@ export type StructuredCallOptions<T extends z.ZodType> = {
   toolDescription: string;
   maxTokens?: number;
   temperature?: number;
+  effort?: ReasoningEffort;
 };
 
-/**
- * Runs one Anthropic call constrained to a tool, so the model must return an
- * object matching `schema`. Validated with Zod before it ever reaches the UI.
- */
-export async function callStructured<T extends z.ZodType>({
-  system,
-  prompt,
-  schema,
-  toolName,
-  toolDescription,
-  maxTokens = 2600,
-  temperature = 0.6,
-}: StructuredCallOptions<T>): Promise<z.infer<T>> {
-  const anthropic = getClient();
+function upstream(error: unknown): never {
+  const status =
+    (error instanceof OpenAI.APIError || error instanceof Anthropic.APIError) &&
+    typeof error.status === "number"
+      ? error.status
+      : 502;
 
+  throw new CooeAIError(
+    error instanceof Error ? error.message : "Upstream request failed.",
+    status === 429 ? 429 : 502,
+    "upstream",
+  );
+}
+
+function validate<T extends z.ZodType>(schema: T, raw: unknown): z.infer<T> {
+  const parsed = schema.safeParse(raw);
+  if (!parsed.success) {
+    throw new CooeAIError(
+      `Model output failed validation: ${parsed.error.issues
+        .slice(0, 4)
+        .map((i) => `${i.path.join(".") || "root"} ${i.message}`)
+        .join("; ")}`,
+      502,
+      "invalid_output",
+    );
+  }
+  return parsed.data;
+}
+
+/**
+ * One structured call, constrained so the model must return an object matching
+ * `schema`. Always validated with Zod before it can reach the UI.
+ */
+export async function callStructured<T extends z.ZodType>(
+  options: StructuredCallOptions<T>,
+): Promise<z.infer<T>> {
+  const provider = getProvider();
+  if (!provider) {
+    throw new CooeAIError(
+      "No AI provider key is configured.",
+      503,
+      "unconfigured",
+    );
+  }
+
+  return provider === "openai"
+    ? callOpenAI(options, getModel("openai"))
+    : callAnthropic(options, getModel("anthropic"));
+}
+
+async function callOpenAI<T extends z.ZodType>(
+  {
+    system,
+    prompt,
+    schema,
+    toolName,
+    maxTokens = 2600,
+    effort = "low",
+  }: StructuredCallOptions<T>,
+  model: string,
+): Promise<z.infer<T>> {
+  let completion: OpenAI.Chat.Completions.ChatCompletion;
+  try {
+    completion = await getOpenAI().chat.completions.create({
+      model,
+      reasoning_effort: effort,
+      // Reasoning tokens share this budget, so leave generous headroom.
+      max_completion_tokens: maxTokens + 1200,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: prompt },
+      ],
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: toolName,
+          strict: true,
+          schema: toStrictJsonSchema(schema),
+        },
+      },
+    });
+  } catch (error) {
+    upstream(error);
+  }
+
+  const choice = completion.choices[0];
+
+  if (choice?.message?.refusal) {
+    throw new CooeAIError(choice.message.refusal, 422, "refused");
+  }
+
+  if (choice?.finish_reason === "length") {
+    throw new CooeAIError(
+      "Model response was cut off before it completed.",
+      502,
+      "invalid_output",
+    );
+  }
+
+  const content = choice?.message?.content;
+  if (!content) {
+    throw new CooeAIError("Model returned no content.", 502, "invalid_output");
+  }
+
+  let raw: unknown;
+  try {
+    raw = JSON.parse(content);
+  } catch {
+    throw new CooeAIError(
+      "Model returned unparseable JSON.",
+      502,
+      "invalid_output",
+    );
+  }
+
+  return validate(schema, raw);
+}
+
+async function callAnthropic<T extends z.ZodType>(
+  {
+    system,
+    prompt,
+    schema,
+    toolName,
+    toolDescription,
+    maxTokens = 2600,
+    temperature = 0.6,
+  }: StructuredCallOptions<T>,
+  model: string,
+): Promise<z.infer<T>> {
   let response: Anthropic.Message;
   try {
-    response = await anthropic.messages.create({
-      model: getModel(),
+    response = await getAnthropic().messages.create({
+      model,
       max_tokens: maxTokens,
       temperature,
       system,
@@ -88,30 +222,16 @@ export async function callStructured<T extends z.ZodType>({
         {
           name: toolName,
           description: toolDescription,
-          input_schema: toInputSchema(schema) as Anthropic.Tool.InputSchema,
+          input_schema: toStrictJsonSchema(
+            schema,
+          ) as unknown as Anthropic.Tool.InputSchema,
         },
       ],
       tool_choice: { type: "tool", name: toolName },
       messages: [{ role: "user", content: prompt }],
     });
   } catch (error) {
-    const status =
-      error instanceof Anthropic.APIError && typeof error.status === "number"
-        ? error.status
-        : 502;
-    throw new CooeAIError(
-      error instanceof Error ? error.message : "Upstream request failed.",
-      status === 429 ? 429 : 502,
-      "upstream",
-    );
-  }
-
-  if (response.stop_reason === "refusal") {
-    throw new CooeAIError(
-      "The model declined to analyse this input.",
-      422,
-      "refused",
-    );
+    upstream(error);
   }
 
   const toolUse = response.content.find(
@@ -127,22 +247,5 @@ export async function callStructured<T extends z.ZodType>({
     );
   }
 
-  const parsed = schema.safeParse(toolUse.input);
-  if (!parsed.success) {
-    throw new CooeAIError(
-      `Model output failed validation: ${parsed.error.issues
-        .slice(0, 4)
-        .map((i) => `${i.path.join(".") || "root"} ${i.message}`)
-        .join("; ")}`,
-      502,
-      "invalid_output",
-    );
-  }
-
-  return parsed.data;
-}
-
-/** True when the server can actually talk to the AI provider. */
-export function isAIConfigured(): boolean {
-  return Boolean(process.env.ANTHROPIC_API_KEY);
+  return validate(schema, toolUse.input);
 }

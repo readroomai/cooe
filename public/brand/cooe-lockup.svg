@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 200" width="640" height="200" role="img" aria-label="Cooe — See what they hear">
+  <defs>
+    <radialGradient id="lcore" cx="46%" cy="36%" r="62%">
+      <stop offset="0%" stop-color="#ff4d05"/>
+      <stop offset="30%" stop-color="#ff7a3c"/>
+      <stop offset="58%" stop-color="#ff96b0" stop-opacity="0.6"/>
+      <stop offset="80%" stop-color="#ffd6e0" stop-opacity="0.2"/>
+      <stop offset="96%" stop-color="#fcfbf9" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="lsoften" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+  </defs>
+  <rect width="640" height="200" fill="#fcfbf9"/>
+  <circle cx="92" cy="100" r="56" fill="url(#lcore)" filter="url(#lsoften)"/>
+  <text x="176" y="94" font-family="Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+        font-size="46" letter-spacing="-1" fill="#14110f">cooe</text>
+  <text x="178" y="130" font-family="Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+        font-size="18" fill="#6f6862">See what they hear.</text>
+</svg>

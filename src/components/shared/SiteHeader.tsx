@@ -57,7 +57,7 @@ export function SiteHeader() {
         <Wordmark />
 
         <nav className="flex items-center gap-5 sm:gap-7" aria-label="Primary">
-          <span className="hidden text-[12px] text-faint sm:inline">
+          <span className="hidden text-[12px] text-muted sm:inline">
             Free beta · no account needed
           </span>
           <Link

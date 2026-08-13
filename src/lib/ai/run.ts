@@ -48,6 +48,7 @@ export function runCheck(input: CheckInput): Promise<CheckResult> {
     toolDescription:
       "Return the complete Cooe Check analysis for the user's message.",
     maxTokens: 3000,
+    effort: "medium",
   });
 }
 
@@ -60,6 +61,7 @@ export function runMap(input: MapInput): Promise<MapResult> {
     toolDescription:
       "Return the complete Cooe Map analysis for the user's situation.",
     maxTokens: 2800,
+    effort: "medium",
   });
 }
 
@@ -72,6 +74,7 @@ export function runRepair(input: RepairInput): Promise<RepairResult> {
     toolDescription:
       "Return the complete Cooe Repair plan for the user's situation.",
     maxTokens: 2800,
+    effort: "medium",
   });
 }
 
@@ -109,7 +112,8 @@ export function runRehearsalReply(
     toolName: "cooe_rehearsal_reply",
     toolDescription: "Return the other person's next line in the rehearsal.",
     maxTokens: 700,
-    temperature: 0.85,
+    temperature: 0.95,
+    effort: "low",
   });
 }
 
@@ -125,6 +129,7 @@ export function runRehearsalCoach(
     toolDescription: "Return brief coaching on the user's most recent turn.",
     maxTokens: 800,
     temperature: 0.5,
+    effort: "low",
   });
 }
 
@@ -140,5 +145,6 @@ export function runRehearsalDebrief(
     toolDescription: "Return the rehearsal debrief.",
     maxTokens: 1600,
     temperature: 0.5,
+    effort: "medium",
   });
 }

@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "graphics:generate": "node scripts/generate-graphics.mjs",
+    "graphics:process": "node scripts/process-graphics.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.116.0",

@@ -4,12 +4,13 @@ import { Signal } from "@/components/shared/Signal";
 export function Hero() {
   return (
     <section className="relative flex min-h-[calc(100svh-104px)] flex-col justify-center px-5 pb-16 pt-8 sm:px-10 sm:pb-20 sm:pt-0">
-      {/* The Signal sits behind the type, bleeding off the top on small screens. */}
-      <div className="pointer-events-none absolute inset-x-0 top-[2%] flex justify-center sm:top-[6%]">
+      {/* The Signal weights the right of the frame; the type holds the left. */}
+      <div className="pointer-events-none absolute -z-10 right-[-26%] top-[-24%] sm:right-[-12%] sm:top-[-30%] lg:right-[-5%] lg:top-[-26%]">
         <Signal
-          className="h-[340px] w-[340px] sm:h-[520px] sm:w-[520px] lg:h-[600px] lg:w-[600px]"
-          blur={52}
-          opacity={0.92}
+          className="h-[400px] w-[400px] sm:h-[620px] sm:w-[620px] lg:h-[760px] lg:w-[760px]"
+          priority
+          opacity={0.88}
+          sizes="(max-width: 640px) 400px, (max-width: 1024px) 620px, 760px"
         />
       </div>
 

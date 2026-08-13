@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright mcp output
+.playwright-mcp/
+
+# raw generated artwork (regenerate with scripts/generate-graphics.mjs)
+scripts/raw/
