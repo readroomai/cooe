@@ -24,13 +24,53 @@ import sharp from "sharp";
 const RAW = path.join(process.cwd(), "scripts", "raw");
 const OUT = path.join(process.cwd(), "public", "graphics");
 
-/** The paper the artwork was rendered on. */
-const BG = [252, 251, 249];
+/** Fallback paper, used only if the corners can't be read. */
+const DEFAULT_BG = [252, 251, 249];
 
+/**
+ * Reads the background from the artwork's own corners.
+ *
+ * Sources differ: our gpt-image assets render on #fcfbf9, Midjourney tends
+ * toward a warmer cream. Keying against an assumed colour leaves a halo, so
+ * measure it instead. The corners are always empty background by construction.
+ */
+async function detectBackground(file) {
+  const { data, info } = await sharp(file)
+    .resize(64, 64, { fit: "fill" })
+    .removeAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const at = (x, y) => {
+    const i = (y * info.width + x) * 3;
+    return [data[i], data[i + 1], data[i + 2]];
+  };
+
+  const corners = [
+    at(1, 1),
+    at(info.width - 2, 1),
+    at(1, info.height - 2),
+    at(info.width - 2, info.height - 2),
+  ];
+
+  // The lightest corner is the safest read — a field may bleed into one of them.
+  const brightest = corners.reduce((best, c) =>
+    c[0] + c[1] + c[2] > best[0] + best[1] + best[2] ? c : best,
+  );
+
+  return brightest.every((channel) => channel > 200) ? brightest : DEFAULT_BG;
+}
+
+/**
+ * `feather` is the normalised radius at which the asset starts fading to
+ * nothing, guarding against an asset showing the edge of its own canvas.
+ * Set it to false when the artwork deliberately fills the frame — feathering
+ * one of those would eat real content.
+ */
 const TARGETS = [
   { name: "signal-hero", width: 1024, png: 620 },
   { name: "signal-gap", width: 1200 },
-  { name: "signal-mark", width: 512, png: 512 },
+  { name: "signal-mark", width: 512, png: 512, feather: false },
   { name: "signal-wash", width: 1200 },
 ];
 
@@ -39,7 +79,9 @@ const TARGETS = [
  * For each pixel, alpha is how far the darkest channel has travelled away
  * from the background; the colour is then un-premultiplied back out.
  */
-async function keyOutBackground(file, width) {
+async function keyOutBackground(file, width, featherFrom = 0.84) {
+  const BG = await detectBackground(file);
+
   const { data, info } = await sharp(file)
     .resize({ width, withoutEnlargement: true })
     .ensureAlpha()
@@ -51,7 +93,7 @@ async function keyOutBackground(file, width) {
   const cy = info.height / 2;
   // Feather anything past this fraction of the half-diagonal to nothing, so the
   // asset never shows the edge of its own canvas as a faint rectangle.
-  const INNER = 0.84;
+  const INNER = featherFrom === false ? Infinity : featherFrom;
   const OUTER = 1.0;
 
   for (let i = 0; i < data.length; i += 4) {
@@ -120,7 +162,7 @@ async function main() {
       continue;
     }
 
-    const keyed = await keyOutBackground(source, target.width);
+    const keyed = await keyOutBackground(source, target.width, target.feather);
 
     const webp = path.join(OUT, `${target.name}.webp`);
     await keyed.clone().webp({ quality: 82, effort: 6, alphaQuality: 90 }).toFile(webp);

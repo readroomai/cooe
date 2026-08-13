@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Modal } from "@/components/shared/ui";
 import { Signal } from "@/components/shared/Signal";
+import { Wordmark } from "@/components/shared/Wordmark";
 import { cn } from "@/lib/utils";
 import { DISCLAIMER } from "@/lib/config";
 
@@ -28,12 +29,7 @@ export function StudioRail() {
     <>
       <aside className="sticky top-0 hidden h-svh w-[220px] shrink-0 flex-col justify-between border-r border-line px-7 py-8 lg:flex">
         <div>
-          <Link
-            href="/"
-            className="text-[15px] lowercase leading-none tracking-[-0.02em] text-ink transition-opacity hover:opacity-60"
-          >
-            cooe
-          </Link>
+          <Wordmark />
 
           <nav className="mt-12" aria-label="Studio modes">
             <ul className="space-y-1">

@@ -1,9 +1,24 @@
+import fs from "node:fs/promises";
+import path from "node:path";
 import { ImageResponse } from "next/og";
 
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 
-export default function AppleIcon() {
+async function markDataUri() {
+  const file = path.join(
+    process.cwd(),
+    "public",
+    "graphics",
+    "signal-mark-icon.png",
+  );
+  const bytes = await fs.readFile(file);
+  return `data:image/png;base64,${bytes.toString("base64")}`;
+}
+
+export default async function AppleIcon() {
+  const mark = await markDataUri();
+
   return new ImageResponse(
     (
       <div
@@ -16,15 +31,8 @@ export default function AppleIcon() {
           background: "#fcfbf9",
         }}
       >
-        <div
-          style={{
-            width: 150,
-            height: 150,
-            borderRadius: 9999,
-            background:
-              "radial-gradient(circle at 46% 36%, #ff4d05 0%, #ff7a3c 34%, #ff96b0 62%, rgba(255,214,224,0.5) 82%, rgba(252,251,249,0) 96%)",
-          }}
-        />
+        { }
+        <img src={mark} alt="" width={156} height={156} />
       </div>
     ),
     size,

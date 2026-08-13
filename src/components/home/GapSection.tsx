@@ -1,4 +1,5 @@
 import { Signal } from "@/components/shared/Signal";
+import { Wordmark } from "@/components/shared/Wordmark";
 
 export function GapSection() {
   return (
@@ -34,10 +35,8 @@ export function GapSection() {
 
           <div className="relative flex items-center justify-center py-2 sm:h-full sm:w-[180px] sm:py-0">
             <div className="relative text-center">
-              <span className="block text-[13px] lowercase tracking-[-0.02em] text-ink">
-                cooe
-              </span>
-              <span className="mt-1 block text-[12px] text-muted">
+              <Wordmark as="text" className="text-[13px]" markSize={15} />
+              <span className="mt-1.5 block text-[12px] text-muted">
                 Finds the gap.
               </span>
             </div>

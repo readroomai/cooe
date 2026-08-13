@@ -106,8 +106,9 @@ orynth/screenshots/
 
 public/brand/
   cooe-lockup.svg         mark + wordmark + tagline
+  cooe-mark.png           mark only, 1024, transparent
+  cooe-mark-512.png       mark only, 512, transparent
   cooe-wordmark.svg       wordmark only
-  cooe-mark.svg           mark only (vector)
   cooe-og.png             1200 × 630 social card
   cooe-icon-180.png       app icon
   cooe-icon-64.png        favicon
@@ -136,9 +137,14 @@ Live OG image: `https://cooe.fun/opengraph-image`
 
 **Type** — Instrument Serif for editorial statements, Inter for product text.
 
-**The Signal** — the orange-to-pink colour field is Cooe's only visual object.
+**The mark** — two overlapping fields. The left one is orange, dense and
+clearly bounded: what you mean. The right one is pink, soft and diffuse, with
+no firm edge: what they might hear. Where they overlap is the only part both
+people share. The product thesis in one object.
+
+**The Signal** — the same colour field used as ambient artwork across the site.
 It stands for communication moving from emotion into clarity, and separates
-into two overlapping fields on a result: what you mean, and what they hear.
+into two fields on a result page.
 
 **Wordmark** — always lowercase `cooe`, never capitalised, never all-caps.
 

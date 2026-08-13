@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { StudioRail, StudioBottomNav } from "@/components/studio/StudioNav";
+import { Wordmark } from "@/components/shared/Wordmark";
 
 export default function StudioLayout({
   children,
@@ -12,12 +12,7 @@ export default function StudioLayout({
 
       {/* Compact header for small screens; the rail replaces it from lg up. */}
       <div className="flex items-center justify-between border-b border-line px-5 py-4 lg:hidden">
-        <Link
-          href="/"
-          className="text-[15px] lowercase leading-none tracking-[-0.02em] text-ink"
-        >
-          cooe
-        </Link>
+        <Wordmark />
         <span className="text-[11px] text-faint">Free beta</span>
       </div>
 

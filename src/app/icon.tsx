@@ -1,9 +1,25 @@
+import fs from "node:fs/promises";
+import path from "node:path";
 import { ImageResponse } from "next/og";
 
 export const size = { width: 64, height: 64 };
 export const contentType = "image/png";
 
-export default function Icon() {
+/** Inlined at build time — Satori cannot fetch a relative asset. */
+async function markDataUri() {
+  const file = path.join(
+    process.cwd(),
+    "public",
+    "graphics",
+    "signal-mark-icon.png",
+  );
+  const bytes = await fs.readFile(file);
+  return `data:image/png;base64,${bytes.toString("base64")}`;
+}
+
+export default async function Icon() {
+  const mark = await markDataUri();
+
   return new ImageResponse(
     (
       <div
@@ -11,18 +27,13 @@ export default function Icon() {
           width: "100%",
           height: "100%",
           display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           background: "#fcfbf9",
         }}
       >
-        <div
-          style={{
-            width: "100%",
-            height: "100%",
-            borderRadius: 9999,
-            background:
-              "radial-gradient(circle at 46% 36%, #ff4d05 0%, #ff7a3c 34%, #ff96b0 62%, rgba(255,214,224,0.5) 82%, rgba(252,251,249,0) 96%)",
-          }}
-        />
+        { }
+        <img src={mark} alt="" width={64} height={64} />
       </div>
     ),
     size,
