@@ -103,6 +103,7 @@ orynth/screenshots/
   05-check-result.png     full Cooe Mirror result
   06-hero-mobile.png      homepage, 390
   07-rehearse.png         live rehearsal with coaching
+  08-founder.png          founder section
 
 public/brand/
   cooe-lockup.svg         mark + wordmark + tagline
@@ -115,6 +116,7 @@ public/brand/
 
 public/graphics/
   signal-*.webp           the Signal artwork, alpha-keyed
+  founder.webp            founder illustration
 ```
 
 Live OG image: `https://cooe.fun/opengraph-image`

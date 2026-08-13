@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { PageShell } from "@/components/shared/PageShell";
 import { SITE } from "@/lib/config";
@@ -41,18 +42,28 @@ export default function AboutPage() {
           reading and something concrete to say. What you do with it is yours.
         </p>
 
-        <div className="border-t border-line pt-8">
-          <p className="text-[14px] leading-[1.7] text-muted">
-            A project by {SITE.founder.name}.
-          </p>
-          <a
-            href={SITE.founder.url}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="mt-2 inline-block text-[14px] text-ink underline decoration-line-strong underline-offset-[5px] hover:decoration-ink"
-          >
-            {SITE.founder.handle} ↗
-          </a>
+        <div className="flex flex-wrap items-end gap-8 border-t border-line pt-8">
+          <Image
+            src="/graphics/founder.webp"
+            alt={`Illustrated portrait of ${SITE.founder.name}`}
+            width={900}
+            height={1125}
+            sizes="180px"
+            className="w-[150px] rounded-sm sm:w-[180px]"
+          />
+          <div>
+            <p className="text-[14px] leading-[1.7] text-muted">
+              A project by {SITE.founder.name}.
+            </p>
+            <a
+              href={SITE.founder.url}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="mt-2 inline-block text-[14px] text-ink underline decoration-line-strong underline-offset-[5px] hover:decoration-ink"
+            >
+              {SITE.founder.handle} ↗
+            </a>
+          </div>
         </div>
 
         <div className="border-t border-line pt-8">
